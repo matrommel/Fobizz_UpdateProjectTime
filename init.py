@@ -70,23 +70,26 @@ def main():
 
         # Button "24 Std (bis max. 7 Tage)" prüfen und klicken
         try:
-            button = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
-            )
-            if button.is_displayed():
-                button.click()
-                updated_headlines.append(headline.text)
+            while True:
+                button = WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
+                )
+                if button.is_displayed():
+                    button.click()
+                    updated_headlines.append(headline.text)
+                else:
+                    break
         except:
             print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
 
     driver.quit()
 
     # Erfolgsmeldung
-    print("Erfolg! Besuchte Projekte:")
+    print("Erfolg! Besuchte Überschriften:")
     for headline in visited_headlines:
         print(headline)
 
-    print("\nErfolg! Aktualisierte Projekte:")
+    print("\nErfolg! Aktualisierte Überschriften:")
     for headline in updated_headlines:
         print(headline)
 
