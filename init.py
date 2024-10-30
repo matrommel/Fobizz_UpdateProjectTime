@@ -1,4 +1,3 @@
-import csv
 import configparser
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,8 +13,8 @@ config.read('config.ini')
 username = config['login']['username']
 password = config['login']['password']
 
-# Pfad zur CSV-Datei
-csv_file_path = 'urls.csv'
+# URL der Übersichtsseite
+overview_url = 'https://tools.fobizz.com/t/school_classes'
 
 # Funktion, um sich einzuloggen
 def login(driver):
@@ -35,43 +34,60 @@ def main():
     # WebDriver initialisieren
     driver = webdriver.Chrome(options=chrome_options)  # Stellen Sie sicher, dass der ChromeDriver installiert ist
     visited_headlines = []
+    updated_headlines = []
 
-    with open(csv_file_path, newline='') as csvfile:
-        url_reader = csv.reader(csvfile)
-        for row in url_reader:
-            url = row[0]
-            driver.get(url)
+    # Übersichtseite besuchen und Links sammeln
+    driver.get(overview_url)
+    
+    # Überprüfen, ob Login erforderlich ist
+    if "sign_in" in driver.current_url:
+        login(driver)
+        driver.get(overview_url)
 
-            # Überprüfen, ob Login erforderlich ist
-            if "sign_in" in driver.current_url:
-                login(driver)
-                driver.get(url)
+    # Links der Klassen sammeln
+    class_links = []
+    try:
+        elements = WebDriverWait(driver, 5).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[data-cy='link-school_class']"))
+        )
+        class_links = [element.get_attribute('href') for element in elements]
+    except:
+        print("Keine Links gefunden")
 
-            # Überschriften notieren
-            try:
-                headlines = WebDriverWait(driver, 5).until(
-                    EC.presence_of_all_elements_located((By.CLASS_NAME, "tools-navbar__itemTitle"))
-                )
-                for headline in headlines:
-                    visited_headlines.append(headline.text)
-            except:
-                print(f"Keine Überschrift auf {url} gefunden")
+    # Jede Klasse besuchen und Aktionen durchführen
+    for url in class_links:
+        driver.get(url)
 
-            # Button "24 Std (bis max. 7 Tage)" prüfen und klicken
-            try:
-                button = WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
-                )
-                while button.is_displayed():
-                    button.click()
-            except:
-                print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
+        # Überschriften notieren
+        try:
+            headlines = WebDriverWait(driver, 5).until(
+                EC.presence_of_all_elements_located((By.CLASS_NAME, "tools-navbar__itemTitle"))
+            )
+            for headline in headlines:
+                visited_headlines.append(headline.text)
+        except:
+            print(f"Keine Überschrift auf {url} gefunden")
+
+        # Button "24 Std (bis max. 7 Tage)" prüfen und klicken
+        try:
+            button = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
+            )
+            if button.is_displayed():
+                button.click()
+                updated_headlines.append(headline.text)
+        except:
+            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
 
     driver.quit()
 
     # Erfolgsmeldung
-    print("Erfolg! Besuchte und aktualisierte Überschriften:")
+    print("Erfolg! Besuchte Projekte:")
     for headline in visited_headlines:
+        print(headline)
+
+    print("\nErfolg! Aktualisierte Projekte:")
+    for headline in updated_headlines:
         print(headline)
 
 if __name__ == "__main__":
