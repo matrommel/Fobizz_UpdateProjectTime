@@ -89,9 +89,7 @@ def main():
     for headline in visited_headlines:
         print(headline)
 
-    print("\nErfolg! Aktualisierte Überschriften:")
-    for headline in updated_headlines:
-        print(headline)
+   
 
 if __name__ == "__main__":
     main()
