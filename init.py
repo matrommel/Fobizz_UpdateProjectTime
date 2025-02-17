@@ -17,12 +17,7 @@ password = config['login']['password']
 overview_url = 'https://tools.fobizz.com/t/school_classes'
 
 # Funktion, um sich einzuloggen
-def login(driver):
-    try:
-        timeout = config['webdriver']['timeout']
-    except KeyError:
-        timeout = 5
-
+def login(driver, timeout):
     driver.get('https://plattform.fobizz.com/users/sign_in')
     WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.ID, 'user_email'))).send_keys(username)
     driver.find_element(By.ID, 'user_password').send_keys(password)
@@ -36,6 +31,12 @@ def main():
         headlessmode = config['webdriver']['headlessmode']
     except KeyError:
         headlessmode = 5
+
+    try:
+        timeout = config['webdriver']['timeout']
+    except KeyError:
+        timeout = 5
+
 
     if headlessmode == "True":
         chrome_options.add_argument("--headless")
@@ -52,13 +53,13 @@ def main():
     
     # Überprüfen, ob Login erforderlich ist
     if "sign_in" in driver.current_url:
-        login(driver)
+        login(driver, timeout)
         driver.get(overview_url)
 
     # Links der Klassen sammeln
     class_links = []
     try:
-        elements = WebDriverWait(driver, 5).until(
+        elements = WebDriverWait(driver, timeout).until(
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[data-cy='link-school_class']"))
         )
         class_links = [element.get_attribute('href') for element in elements]
@@ -71,7 +72,7 @@ def main():
 
         # Überschriften notieren
         try:
-            headlines = WebDriverWait(driver, 5).until(
+            headlines = WebDriverWait(driver, timeout).until(
                 EC.presence_of_all_elements_located((By.CLASS_NAME, "tools-navbar__itemTitle"))
             )
             for headline in headlines:
@@ -82,7 +83,7 @@ def main():
         # Button "24 Std (bis max. 7 Tage)" prüfen und klicken
         try:
             while True:
-                button = WebDriverWait(driver, 5).until(
+                button = WebDriverWait(driver, timeout).until(
                     EC.presence_of_element_located((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
                 )
                 if button.is_displayed():
@@ -91,7 +92,7 @@ def main():
                 else:
                     break
         except Exception as e:
-            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden:")
+            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
 
 
     driver.quit()
