@@ -18,8 +18,13 @@ overview_url = 'https://tools.fobizz.com/t/school_classes'
 
 # Funktion, um sich einzuloggen
 def login(driver):
+    try:
+        timeout = config['webdriver']['timeout']
+    except KeyError:
+        timeout = 5
+
     driver.get('https://plattform.fobizz.com/users/sign_in')
-    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.ID, 'user_email'))).send_keys(username)
+    WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.ID, 'user_email'))).send_keys(username)
     driver.find_element(By.ID, 'user_password').send_keys(password)
     driver.find_element(By.XPATH, '//input[@value="Einloggen"]').click()
 
@@ -27,7 +32,13 @@ def login(driver):
 def main():
     # Chrome-Optionen für den Headless-Modus konfigurieren
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
+    try:
+        headlessmode = config['webdriver']['headlessmode']
+    except KeyError:
+        headlessmode = 5
+
+    if headlessmode == "True":
+        chrome_options.add_argument("--headless")
     chrome_options.add_argument("--disable-gpu")  # Optional, kann helfen, einige Rendering-Probleme zu vermeiden
     chrome_options.add_argument("--window-size=1920x1080")  # Setzt die Fenstergröße, um Ladeprobleme zu vermeiden
 
@@ -79,8 +90,9 @@ def main():
                     updated_headlines.append(headline.text)
                 else:
                     break
-        except:
-            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
+        except Exception as e:
+            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden: {e}")
+
 
     driver.quit()
 

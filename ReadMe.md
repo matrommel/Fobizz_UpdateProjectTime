@@ -7,7 +7,14 @@ In Fobizz können für Gruppen Projekte angelegt werden. Diese Projekte sind max
 [login]
 username = Hello
 password = World
+
+[webdriver]
+timeout = 5
+headlessmode = True
 </pre>
+
+
+
 
 2. Führe init.py aus
 <pre>
@@ -21,3 +28,11 @@ Erstelle eine run.cmd mit folgenden inhalt
 python ./init.py
 pause
 </pre>
+
+### config.ini Parameter webdriver
+- Timeout (optional):
+    - Wert: int oder float
+    - Beschreibung: Eine kürzere timeout beschleunigt das Script, könnte aber dafür sorgen, dass die Seite im Hintergrund nicht korrekt geladen wird
+- headlessmode (optional):
+    - Wert: True, False
+    - Beschreibung: Bei False kann der Seitenaufruf von Fobizz nachvollzogen werden (Debug-Mode)
