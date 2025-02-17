@@ -91,7 +91,7 @@ def main():
                 else:
                     break
         except Exception as e:
-            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden: {e}")
+            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden:")
 
 
     driver.quit()
