@@ -30,13 +30,12 @@ def main():
     try:
         headlessmode = config['webdriver']['headlessmode']
     except KeyError:
-        headlessmode = 5
+        headlessmode = "False"
 
     try:
-        timeout = config['webdriver']['timeout']
+        timeout = int(config['webdriver']['timeout'])
     except KeyError:
         timeout = 5
-
 
     if headlessmode == "True":
         chrome_options.add_argument("--headless")
@@ -47,6 +46,7 @@ def main():
     driver = webdriver.Chrome(options=chrome_options)  # Stellen Sie sicher, dass der ChromeDriver installiert ist
     visited_headlines = []
     updated_headlines = []
+    failed_urls = []
 
     # Übersichtseite besuchen und Links sammeln
     driver.get(overview_url)
@@ -67,6 +67,7 @@ def main():
         print("Keine Links gefunden")
 
     # Jede Klasse besuchen und Aktionen durchführen
+    print("Aktualisiere folgende Klassen:")
     for url in class_links:
         driver.get(url)
 
@@ -77,8 +78,10 @@ def main():
             )
             for headline in headlines:
                 visited_headlines.append(headline.text)
+                print(f"{headline.text} - {url}")
         except:
             print(f"Keine Überschrift auf {url} gefunden")
+
 
         # Button "24 Std (bis max. 7 Tage)" prüfen und klicken
         try:
@@ -91,18 +94,21 @@ def main():
                     updated_headlines.append(headline.text)
                 else:
                     break
-        except Exception as e:
-            print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
-
-
+        except:
+            # print(f"Button auf {url} nicht mehr vorhanden oder konnte nicht geklickt werden")
+            failed_urls.append(url)
+           
     driver.quit()
 
-    # Erfolgsmeldung
-    print("Erfolg! Besuchte Überschriften:")
-    for headline in visited_headlines:
-        print(headline)
-
-   
+    # Erfolgsmeldung falls etwas aktualisiert wurde
+    if updated_headlines:
+        # Duplikate entfernen, indem ein Set verwendet wird
+        unique_headlines = list(set(updated_headlines))
+        print("Erfolg! Besuchte Klassen:")
+        for headline in unique_headlines:
+            print(headline)
+    else:
+        print("Alle Klassen sind aktualisiert")
 
 if __name__ == "__main__":
     main()
