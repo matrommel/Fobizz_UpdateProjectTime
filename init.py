@@ -60,7 +60,7 @@ def main():
     class_links = []
     try:
         elements = WebDriverWait(driver, timeout).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[data-cy='link-school_class']"))
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, "a[data-testid='link-school_class']"))
         )
         class_links = [element.get_attribute('href') for element in elements]
     except:
