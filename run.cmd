@@ -1,3 +1,3 @@
 @echo off
-python C:\Users\mromm\source\repos\Fobizz_UpdateProjectTime/init.py
+python C:\Users\admin\Documents\repos\Fobizz_UpdateProjectTime/init.py
 pause
