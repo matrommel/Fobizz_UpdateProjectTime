@@ -1,4 +1,6 @@
 import configparser
+import platform
+import os
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -24,9 +26,40 @@ def login(driver, timeout):
     driver.find_element(By.ID, 'user_password').send_keys(password)
     driver.find_element(By.XPATH, '//input[@value="Einloggen"]').click()
 
+# Funktion zum Erstellen des WebDrivers
+def get_driver(chrome_options):
+    """
+    Erstellt den WebDriver basierend auf der Umgebung:
+    - Windows: Lokaler ChromeDriver
+    - Linux/NAS: Remote Chrome via Docker (falls SELENIUM_REMOTE_URL gesetzt)
+    """
+    selenium_remote = os.environ.get("SELENIUM_REMOTE_URL")
+    
+    if selenium_remote:
+        # Remote Chrome (Docker auf NAS)
+        print(f"Verwende Remote Chrome: {selenium_remote}")
+        driver = webdriver.Remote(
+            command_executor=selenium_remote,
+            options=chrome_options
+        )
+    elif platform.system() == "Windows":
+        # Lokaler Chrome unter Windows
+        print("Verwende lokalen Chrome (Windows)")
+        driver = webdriver.Chrome(options=chrome_options)
+    else:
+        # Linux ohne Remote-URL -> versuche trotzdem Remote (Docker default)
+        remote_url = "http://localhost:4444/wd/hub"
+        print(f"Linux erkannt, versuche Docker Remote: {remote_url}")
+        driver = webdriver.Remote(
+            command_executor=remote_url,
+            options=chrome_options
+        )
+    
+    return driver
+
 # Hauptfunktion
 def main():
-    # Chrome-Optionen für den Headless-Modus konfigurieren
+    # Chrome-Optionen konfigurieren
     chrome_options = Options()
     try:
         headlessmode = config['webdriver']['headlessmode']
@@ -40,11 +73,14 @@ def main():
 
     if headlessmode == "True":
         chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")  # Optional, kann helfen, einige Rendering-Probleme zu vermeiden
-    chrome_options.add_argument("--window-size=1920x1080")  # Setzt die Fenstergröße, um Ladeprobleme zu vermeiden
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--window-size=1920x1080")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # WebDriver initialisieren
-    driver = webdriver.Chrome(options=chrome_options)  # Stellen Sie sicher, dass der ChromeDriver installiert ist
+    # WebDriver initialisieren (automatische Erkennung)
+    driver = get_driver(chrome_options)
+    
     visited_headlines = []
     updated_headlines = []
     failed_urls = []
@@ -150,7 +186,7 @@ def main():
         try:
             while True:
                 button = WebDriverWait(driver, 2).until(
-                    EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']"))
+                    EC.element_to_be_clickable((By.XPATH, "//button[@aria-label='24 Std']"))
                 )
 
                 if button.is_displayed() and button.is_enabled():
@@ -163,7 +199,7 @@ def main():
 
                     # Schauen ob noch mehr Buttons da sind
                     try:
-                        remaining_buttons = driver.find_elements(By.XPATH, "//button[@aria-label='24 Std (bis max. 7 Tage)']")
+                        remaining_buttons = driver.find_elements(By.XPATH, "//button[@aria-label='24 Std']")
                         if not remaining_buttons:
                             break
                     except:
